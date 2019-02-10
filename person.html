@@ -1,0 +1,143 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Prove.It Manager</title>
+
+
+
+    <script src="./node_modules/web3/dist/web3.min.js"></script>
+
+</head>
+<body>
+    <div class="container">
+
+        <h1>Prove.It Manager</h1>
+        <h2>Check Worker Record</h2>
+        <label for="hashiris" class="col-lg-2 control-label">Hash Iris Scan</label>
+        <input id="hashiris" type="text">
+        <p id="workerLiveCredit"></p>
+        <p id="workerExists"></p>
+        <p id="RedeemedCredits"></p>
+        <button id="btnCheckIrisHash">Check Iris Check</button>
+
+        <h2>Check Shop Record</h2>
+        <label for="ShopAddress" class="col-lg-2 control-label">Shop Address</label>
+        <input id="ShopAddress" type="text">
+        <p id="shopLiveCredit"></p>
+        <p id="shopExists"></p>
+        <p id="lat"></p>
+        <p id="longloc"></p>
+        <button id="btnCheckShop">Check Shop</button>
+
+        <h2>Check Worker Presence</h2>
+        <label for="presenceIrishHash" class="col-lg-2 control-label">Worker Hash Iris</label>
+        <input id="presenceIrishHash" type="text"><p></p>
+        <label for="presenceShopAddress" class="col-lg-2 control-label">Shop Address</label>
+        <input id="presenceShopAddress" type="text"><p></p>
+        <label for="presenceLat" class="col-lg-2 control-label">Worker Latitude</label>
+        <input id="presenceLat" type="text"><p></p>
+        <label for="presenceLong" class="col-lg-2 control-label">Worker Longitude</label>
+        <input id="presenceLong" type="text"><p></p>
+        <p id="presenceConfirmed"></p>
+        <button id="btnCheckPresence">Check Presence</button>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script>
+    if (typeof web3 !== 'undefined') {
+       web3 = new Web3(web3.currentProvider);
+   } else {
+       // set the provider you want from Web3.providers
+       web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+   }
+       // Our future code here..
+        web3.eth.defaultAccount = web3.eth.accounts[0];
+        var ProveitContractABI = web3.eth.contract([ { "constant": false, "inputs": [ { "name": "_workerIrisIdentifierHash", "type": "bytes32" }, { "name": "liveCredit", "type": "uint256" } ], "name": "addLiveCredits", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": false, "inputs": [ { "name": "shopAddress", "type": "address" }, { "name": "lat", "type": "uint256" }, { "name": "longloc", "type": "uint256" } ], "name": "addShop", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": false, "inputs": [ { "name": "_workerIrisIdentifierHash", "type": "bytes32" } ], "name": "addWorkerRecord", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": false, "inputs": [ { "name": "_workerIrisIdentifierHash", "type": "bytes32" }, { "name": "shopAddress", "type": "address" } ], "name": "redeemCredits", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "constant": true, "inputs": [ { "name": "_workerIrisIdentifierHash", "type": "bytes32" } ], "name": "checkLiveCredits", "outputs": [ { "name": "", "type": "uint256" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [ { "name": "_workerIrisIdentifierHash", "type": "bytes32" }, { "name": "shopAddress", "type": "address" }, { "name": "lat", "type": "uint256" }, { "name": "longloc", "type": "uint256" } ], "name": "checkWorkerPresence", "outputs": [ { "name": "", "type": "bool" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [ { "name": "", "type": "address" } ], "name": "ShopRecords", "outputs": [ { "name": "shopLiveCredit", "type": "uint256" }, { "name": "shopExists", "type": "bool" }, { "name": "lat", "type": "uint256" }, { "name": "longloc", "type": "uint256" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [ { "name": "", "type": "bytes32" } ], "name": "WorkerRecords", "outputs": [ { "name": "workerLiveCredit", "type": "uint256" }, { "name": "workerExists", "type": "bool" }, { "name": "RedeemedCredits", "type": "uint256" } ], "payable": false, "stateMutability": "view", "type": "function" } ]);
+        var ProveitContract = ProveitContractABI.at('0x44414d828dfe4ec91d103f8f05aba93fa440984b');
+
+$("#btnCheckIrisHash").click(function() {
+
+  var hashiris = $("#hashiris").val();
+    ProveitContract.WorkerRecords(hashiris, function(error, result){
+    if(!error)
+    {
+        $("#workerLiveCredit").html('Live Credit  ' + result[0]);
+        $("#WorkerExists").html('Worker Exists ' + result[1]);
+        $("#RedeemedCredits").html('Redeemed Credits ' + result[2]);
+        console.log(result);
+    }
+    else {
+        $("#workerLiveCredit").html('Live Credit 0 '  );
+        $("#WorkerExists").html('Worker Exists - NO '  );
+        $("#RedeemedCredits").html('Redeemed Credits 0 '  );
+        console.error(error);
+      }
+    });
+
+
+});
+
+$("#btnCheckShop").click(function() {
+
+  var shopAddress = $("#ShopAddress").val();
+    ProveitContract.ShopRecords(shopAddress, function(error, result){
+    if(!error)
+    {
+        $("#shopLiveCredit").html('Live Credit  ' + result[0]);
+        $("#shopExists").html('Shop Exists ' + result[1]);
+        $("#lat").html('Latitude ' + result[2]);
+        $("#longloc").html('Longitude ' + result[3]);
+        console.log(result);
+    }
+    else {
+        $("#shopLiveCredit").html('Live Credit 0 '  );
+        $("#shopExists").html('Shop Exists - NO '  );
+        $("#lat").html('Latitude 0 '  );
+        $("#longloc").html('Longitude 0 '  );
+        console.error(error);
+      }
+    });
+});
+
+
+$("#btnCheckPresence").click(function() {
+
+    var presenceIrishHash = $("#presenceIrishHash").val();
+    var presenceShopAddress = $("#presenceShopAddress").val();
+    var presenceLat = $("#presenceLat").val();
+    var presenceLong = $("#presenceLong").val();
+    ProveitContract.checkWorkerPresence(presenceIrishHash, presenceShopAddress,
+      presenceLat,presenceLong,
+
+      function(error, result){
+    if(!error)
+    {
+        $("#presenceConfirmed").html('Presence  ' + result);
+        console.log(result);
+    }
+    else {
+        $("#presenceConfirmed").html('Presence  NO ');
+        console.error(error);
+      }
+    });
+});
+
+
+        console.log(ProveitContract);
+
+    </script>
+
+</body>
+</html>
