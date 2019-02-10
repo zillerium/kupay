@@ -9,9 +9,12 @@ contract KuPayPayroll {
         uint RedeemedCredits;
     }
 
+    // lat and long recs are simplified for the demo, we need an actual proof of location
     struct ShopRecord {
         uint shopLiveCredit;
         bool shopExists;
+        uint lat;
+        uint longloc;
     }
 
 
@@ -38,16 +41,39 @@ contract KuPayPayroll {
 
     }
 
-    uint shopLiveCredit;
-        bool shopExists;
-
     function addShop (
-        address shopAddress
+        address shopAddress,
+        uint lat,
+        uint longloc
     ) public  {
         require(!ShopRecords[shopAddress].shopExists, "Shop already exists");
         ShopRecords[shopAddress].shopLiveCredit = 0;
         ShopRecords[shopAddress].shopExists = true;
+        ShopRecords[shopAddress].lat = lat;
+        ShopRecords[shopAddress].longloc = longloc;
     }
+
+    // gps data is  not stored
+    // gps check is simplified to just a numeric check on lat and longloc
+    // need promixty checker in real system
+    function checkWorkerPresence (
+        bytes32 _workerIrisIdentifierHash,
+        address shopAddress,
+        uint lat,
+        uint longloc
+        ) public view returns (bool) {
+            require(WorkerRecords[_workerIrisIdentifierHash].workerExists, "Worker does not exists");
+            require(ShopRecords[shopAddress].shopExists, "Shop does not exist");
+            if (ShopRecords[shopAddress].lat == lat)
+                if (ShopRecords[shopAddress].longloc == longloc) {
+                    return true;
+                } else {
+                    return false;
+                }
+            else
+                return false;
+
+        }
 
     function checkLiveCredits (
          bytes32 _workerIrisIdentifierHash
