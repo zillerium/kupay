@@ -2,78 +2,82 @@ pragma solidity ^0.5.3;
 
 contract KuPayPayroll {
 
-   struct StorePaymentRecord {
-       address workerAddress;
-       uint16 year;
-       uint8 month;
-       uint8 day;
-       uint workerHoursPaid;
-    }
-
-    struct WorkerReceivedPaymentRecord {
-        uint16 year;
-        uint8 month;
-        uint8 day;
-        uint workerHoursPaid;
-     }
-
-// for demo just one currency is used
-    struct StoreRecord {
-        bytes32 shopGPSPositionHash;
-        bytes32 shopIdentifier;
-        uint shopMoneyOwed; //
-        uint8 owedCurrency;
-    }
-
-   // use case is that the rate does not change -
-   // v2 needs a mapping for rates and then to build data to allow different Payment
-   // for different rates
+    // add audit trail in a full system, with dates, and txn details
     struct WorkerRecord {
-        bytes32 workerIrisIdentifierHash;
-        bytes32 workerGPSPositionHash;
-        uint workerHourlyRate;
-        uint workerHoursUnpaid;
-        uint workerHoursPaid;
+        uint workerLiveCredit;
         bool workerExists;
+        uint RedeemedCredits;
     }
 
-    struct WorkerCurrentRecord {
-        uint workerHoursUnpaid;
+    struct ShopRecord {
+        uint shopLiveCredit;
+        bool shopExists;
     }
 
-    address[] public freeAddresses;
 
-    mapping (address => WorkerRecord) public WorkerRecords;
-    mapping (address => StoreRecord) public StoreRecords;
+    // maps scan of iris (hashed) to the worker record
+    mapping (bytes32 => WorkerRecord) public WorkerRecords;
 
-    // map store address to array of payments for the store and then for each worker address
-    mapping (address => mapping (address => StorePaymentRecord[])) public StorePaymentRecords;
+    mapping (address => ShopRecord) public ShopRecords;
+    // store owwner takes credits for later fiat processing
+    // system DOES  NOT make crypto payments, it is a tokenized model
+    // with the worker exchanging tokens for goods or fiat money at a shop
+    // worker record is updated as having had the credit
+    // if the shop commits fraud here there is an audit trail
+    function redeemCredits (
+          bytes32 _workerIrisIdentifierHash,
+          address shopAddress
+        ) public {
+        require(WorkerRecords[_workerIrisIdentifierHash].workerExists, "Worker does not exists");
+        require(ShopRecords[shopAddress].shopExists, "Shop does not exists");
+        ShopRecords[shopAddress].shopLiveCredit += WorkerRecords[_workerIrisIdentifierHash].workerLiveCredit;
+        WorkerRecords[_workerIrisIdentifierHash].RedeemedCredits += WorkerRecords[_workerIrisIdentifierHash].workerLiveCredit;
+        WorkerRecords[_workerIrisIdentifierHash].workerLiveCredit = 0;
 
-    // worker address maps to monies received
-    mapping (address => WorkerReceivedPaymentRecord[]) public WorkerReceivedPaymentRecords;
+
+
+    }
+
+    uint shopLiveCredit;
+        bool shopExists;
+
+    function addShop (
+        address shopAddress
+    ) public  {
+        require(!ShopRecords[shopAddress].shopExists, "Shop already exists");
+        ShopRecords[shopAddress].shopLiveCredit = 0;
+        ShopRecords[shopAddress].shopExists = true;
+    }
+
+    function checkLiveCredits (
+         bytes32 _workerIrisIdentifierHash
+        ) public view returns (uint) {
+            require(WorkerRecords[_workerIrisIdentifierHash].workerExists, "Worker does not exist");
+            return WorkerRecords[_workerIrisIdentifierHash].workerLiveCredit;
+    }
+
+    //  hash of iris scan, this is made up from phone id and actual iris scan
+    // iris scan has 1 in 1 to 10 to power 78 of being false. Also it does not
+    // change with age or facial expressions. Hence the hash is reliable
+    function addLiveCredits(
+        bytes32 _workerIrisIdentifierHash,
+        uint liveCredit
+    ) public  {
+            require(WorkerRecords[_workerIrisIdentifierHash].workerExists, "Worker does not exists");
+            WorkerRecords[_workerIrisIdentifierHash].workerLiveCredit = liveCredit;
+    }
 
     function addWorkerRecord(
-        bytes32 _workerIrisIdentifierHash,
-        bytes32 _workerGPSPositionHash,
-        uint _workerHourlyRate
-    ) public returns (address) {
-        require(freeAddresses.length>0, "no account are free");
-        address _workerAddress = freeAddresses[0];
-        delete freeAddresses[0];
-        require(!WorkerRecords[_workerAddress].workerExists, "Worker already exists");
-        WorkerRecords[_workerAddress].workerIrisIdentifierHash = _workerIrisIdentifierHash;
-        WorkerRecords[_workerAddress].workerGPSPositionHash = _workerGPSPositionHash;
-        WorkerRecords[_workerAddress].workerHourlyRate = _workerHourlyRate;
-        WorkerRecords[_workerAddress].workerHoursUnpaid = 0;
-        WorkerRecords[_workerAddress].workerHoursPaid = 0;
-        WorkerRecords[_workerAddress].workerExists = true;
-        return _workerAddress;
+        bytes32 _workerIrisIdentifierHash
+    ) public  {
+        // added an UN centre in the camp - later directly by workers via a phone
+        // sets live credits to zero
+        require(!WorkerRecords[_workerIrisIdentifierHash].workerExists, "Worker already exists");
+        WorkerRecords[_workerIrisIdentifierHash].workerLiveCredit = 0;
+        WorkerRecords[_workerIrisIdentifierHash].RedeemedCredits = 0;
+        WorkerRecords[_workerIrisIdentifierHash].workerExists = true;
     }
 
-    function addFreeAddress(address _freeAddress ) public {
-        // demo - real app to disallow dups!
-        freeAddresses.push(_freeAddress);
-    }
 
 
 
